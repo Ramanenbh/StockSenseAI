@@ -21,15 +21,16 @@ from difflib import SequenceMatcher
 import requests
 import logging
 
+import streamlit as st
+
 # %%
 from langchain_openai import ChatOpenAI, OpenAIEmbeddings
 from langchain_mongodb.vectorstores import MongoDBAtlasVectorSearch
 from langgraph.checkpoint.memory import MemorySaver
 from langgraph.prebuilt import ToolNode, tools_condition
 from langchain_core.messages import SystemMessage, HumanMessage
-from langgraph.types import interrupt
+from langgraph.types import interrupt, Command
 
-import asyncio, nest_asyncio
 from typing import Dict, List, Any, Optional, Literal, Union
 from bson import ObjectId
 from collections import defaultdict
@@ -679,10 +680,6 @@ initial_state = InputTicker_State(
 )
 
 #%%
-import streamlit as st
-import asyncio
-from langgraph.types import Command
-
 MAX_ATTEMPTS = 3
 
 st.set_page_config(page_title="Stock News Workflow", layout="wide")

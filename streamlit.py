@@ -371,7 +371,7 @@ async def run_parallel_searches(state: InputTicker_State) -> Dict[str, Any]:
     results = await asyncio.gather(
         *(tavily_client.search(
             query=q,
-            max_results=1,
+            max_results=2,
             topic="news",
             search_depth="advanced",
             days=7,
@@ -547,7 +547,7 @@ def create_finalReport_node(state: InputTicker_State) -> InputTicker_State:
     kept = [a for a in articles if a.get("llm_output").get("keep") is True]
     kept.sort(key=lambda x: x.get("llm_output").get("keep_score", 0.0), reverse=True)
 
-    top_k = kept[:2]
+    top_k = kept[:3]
 
     evidence_lines = []
     for index, article in enumerate(top_k, start=1):

@@ -371,7 +371,7 @@ async def run_parallel_searches(state: InputTicker_State) -> Dict[str, Any]:
     results = await asyncio.gather(
         *(tavily_client.search(
             query=q,
-            max_results=2,
+            max_results=3,
             topic="news",
             search_depth="advanced",
             days=7,

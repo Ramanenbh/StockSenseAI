@@ -18,6 +18,7 @@ import os
 import asyncio
 import json
 import certifi
+import json 
 
 from pymongo import MongoClient, UpdateOne
 from pymongo.server_api import ServerApi
@@ -176,8 +177,107 @@ async def run_with_progress_async(payload):
     return ("done", snap.values)
 
 # ---- done screen ----
+#%%
 if st.session_state.final_state is not None:
     st.success("Done.")
+    result = st.session_state.final_state
+
+    ## Section 1 : Summary + Actions
+    st.subheader("News Summary & Actionables")
+    st.markdown(result.get("news_answer", "No report generated."))
+    col1, col2 = st.columns(2, gap="large")
+    with col1:
+        st.markdown("### 🐂 Bullish actions")
+        st.markdown(result.get("bullish_act", "No bullish actions generated."))
+
+    with col2:
+        st.markdown("### 🐻 Bearish actions")
+        st.markdown(result.get("bearish_act", "No bearish actions generated."))
+
+    st.divider()
+
+    ## Section 2: Query & Company Info
+    st.subheader("🏢 Query & company context")
+
+    left, right = st.columns([1, 1], gap="large")
+    with left:
+        st.markdown("**Company**")
+        st.code(result.get("ticker", "—") + " - " + result.get("name", "—"), language=None)
+
+        st.markdown("**Industry**")
+        st.write(result.get("industry", "—"))
+
+    with right:
+        st.markdown("**User query**")
+        st.write(result.get("user_query", "—"))
+
+        st.markdown("**Extracted internet search queries**")
+        st.markdown("\n".join([f"- 🔎 `{q}`" for q in result.get("internet_search_query", [])]))
+        
+    st.markdown("**Firm description**")
+    st.write(result.get("firm_description", "—"))
+
+    st.divider()
+
+    ## Section 3: News Article 
+    st.subheader("📰 Relevant news articles")
+    news_article = result.get("useful_articles_list", []) or []
+
+    for idx, art in enumerate(news_article, start=1):
+        url = art.get("news_url", "") or ""
+        title = art.get("title", "") or ""
+        score = art.get("score", None)
+        published_date = art.get("published_date", "")
+
+        llm_output = art.get("llm_output", {}) or {}
+        primary_topic = llm_output.get("primary_topic", "") or ""
+        keep_reasons = llm_output.get("keep_reasons", "")
+        topics = llm_output.get("topics", [])
+        text_for_rag = llm_output.get("text_for_rag", "")
+
+        # Preview row (non-expanded)
+        # Your requirement: preview shows news_url, title, published date, primary topic
+        expander_label = f"{idx}. {title or '(untitled)'}"
+
+        with st.expander(expander_label, expanded=False):
+            # Preview (top)
+            pcol1, pcol2 = st.columns([3, 2], gap="large")
+            with pcol1:
+                st.markdown("**News URL**")
+                if url:
+                    st.markdown(f"[{url}]({url})")
+                else:
+                    st.write("—")
+
+                st.markdown("**Title**")
+                st.write(title or "—")
+
+            with pcol2:
+                st.markdown("**Published date**")
+                st.write(published_date or "—")
+
+                st.markdown("**Primary topic**")
+                st.write(primary_topic or "—")
+
+            st.divider()
+
+            # Expanded details
+            dcol1, dcol2 = st.columns([1, 1], gap="large")
+            with dcol1:
+                st.markdown("**Score**")
+                st.write(score if score is not None else "—")
+
+            with dcol2:
+                st.markdown("**Topics**")
+                st.write("\n".join([f"- 🧩 {t}" for t in topics]))
+
+            st.markdown("**Keep reasons**")
+            st.write("\n".join([f"- 📝 {r}" for r in keep_reasons]))
+
+            st.divider()
+            st.code(text_for_rag, language=None)
+
+    st.divider()
     st.json(st.session_state.final_state)
 
     if st.button("Reset"):
@@ -187,8 +287,9 @@ if st.session_state.final_state is not None:
         st.session_state.progress_lines = []
         st.rerun()
 
-    st.stop()
+        st.stop()
 
+#%%
 # ---- attempt 1 ----
 if st.session_state.attempts == 0 and st.session_state.pending_prompt is None:
     user_text = st.chat_input("Enter your stock/news query (e.g., 'NVDA latest earnings')")
@@ -207,6 +308,7 @@ if st.session_state.attempts == 0 and st.session_state.pending_prompt is None:
 
         st.rerun()
 
+#%%
 # ---- retry attempts ----
 if st.session_state.pending_prompt is not None:
     st.caption(f"Attempt {st.session_state.attempts}/{MAX_ATTEMPTS}")

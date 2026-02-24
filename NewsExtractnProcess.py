@@ -210,7 +210,7 @@ SYSTEM_PROMPT = f"""You are a financial-news traige assistant.
     Output MUST be valid JSON matching the schema.
 """
 
-def build_user_prompt(article: Dict[str, Any], subject_hint: Optional[str] = None) -> str:
+def build_user_prompt(ticker, industry, article: Dict[str, Any], subject_hint: Optional[str] = None) -> str:
     """
     subject_hint: optional (e.g., ticker name) to help the LLM judge relevance when extending project to 1 stock.
     """
@@ -234,7 +234,8 @@ def build_user_prompt(article: Dict[str, Any], subject_hint: Optional[str] = Non
 
         Task:
         Read the article content and produce JSON fields as per the schema:
-        - Decide keep or not, keep_score and keep_reason
+        - Decide keep or not, keep_score and keep_reason. If the article does not contain any related information to the ticker {ticker} or industry {industry}, do not keep it. 
+        If the article is mostly paywalled content, boilerplate, or not substantively about the subject, do not keep it.
         keep_reason must be of type string
         - Identify primary_topic, topics
         - Determine stance used only these values - ("bullish", "bearish", "neutral", "unclear")
@@ -254,7 +255,9 @@ async def analyse_one_article_llm(
     article: Dict[str, Any],
     llm_model: str,
     subject_hint: Optional[str] = None,
-    max_retries: int = 1
+    max_retries: int = 1,
+    ticker = "",
+    industry = "",
 ) -> Dict[str, Any]:
     """
     Returns a new dict:
@@ -267,7 +270,7 @@ async def analyse_one_article_llm(
 
     for attempt in range(max_retries + 1):
         try:
-            prompt = build_user_prompt(article, subject_hint=subject_hint)
+            prompt = build_user_prompt(ticker, industry, article, subject_hint=subject_hint)
 
             resp = llm_client.chat.completions.create(
                 model=llm_model,
@@ -324,7 +327,9 @@ async def process_all_articles_node(state: InputTicker_State) -> Dict[str, Any]:
         analyse_one_article_llm(
             llm_client= llm_client,
             article= article,
-            llm_model= llm_model
+            llm_model= llm_model,
+            ticker = state.ticker,
+            industry = state.industry,
         )
         for article in articles
     ]
@@ -336,7 +341,7 @@ async def process_all_articles_node(state: InputTicker_State) -> Dict[str, Any]:
     failed_articles = []
     
     for i, result in enumerate(results):
-        if result != {}:
+        if result != {} and result.get("llm_output", {}).get("keep") is True:
             processed_articles.append(result)
         else:
             failed_articles.append(articles[i])
@@ -356,7 +361,7 @@ def create_finalReport_node(state: InputTicker_State) -> InputTicker_State:
     kept = [a for a in articles if a.get("llm_output").get("keep") is True]
     kept.sort(key=lambda x: x.get("llm_output").get("keep_score", 0.0), reverse=True)
 
-    top_k = kept[:3]
+    top_k = kept[:max(4, len(kept))]  # take top 4 or all if less than 4
 
     evidence_lines = []
     for index, article in enumerate(top_k, start=1):

@@ -66,11 +66,11 @@ def llm_extract(state: InputTicker_State) -> dict:
             {
                 "role": "system",
                 "content": (
-                    "Extract ONE US-listed stock ticker if explicitly present, and a concise web/news search query.\n"
+                    "Extract ONE US-listed stock ticker if explicitly present, and a summarised web/news search query.\n"
                     "Rules:\n"
                     "- Output exactly one ticker.\n"
                     "- If multiple tickers appear, choose the most central one.\n"
-                    "- Keep the query short and specific.\n"
+                    "- Keep the query specific to what the user wants to know.\n"
                     "- Return ONLY a JSON object with fields: ticker, query.\n"
                 )
             },

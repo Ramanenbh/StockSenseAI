@@ -292,7 +292,7 @@ if st.session_state.final_state is not None:
 #%%
 # ---- attempt 1 ----
 if st.session_state.attempts == 0 and st.session_state.pending_prompt is None:
-    user_text = st.chat_input("Enter your stock/news query (e.g., 'NVDA latest earnings')")
+    user_text = st.chat_input("Enter your US stock/news query (e.g., 'NVDA latest earnings')")
     if user_text:
         st.session_state.attempts = 1
         st.session_state.progress_lines = []

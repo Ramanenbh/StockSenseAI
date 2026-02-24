@@ -110,7 +110,7 @@ def generate_internet_search_query(state: InputTicker_State) -> Dict[str, List[s
                     '  "internet_search_query": ["<query1>", "<query2>"]\n'
                     "}\n"
                     "Rules:\n"
-                    "You create web/news search queries for INVESTOR GUIDANCE monitoring.\n"
+                    "You create web/news search queries for INVESTOR QUERIES on a stock.\n"
                     "Return ONLY valid JSON with this exact schema:\n"
                     "{\n"
                     '  "internet_search_query": ["<query1>", "<query2>"]\n'
@@ -118,8 +118,8 @@ def generate_internet_search_query(state: InputTicker_State) -> Dict[str, List[s
                     "Rules:\n"
                     "- Exactly 2 queries.\n"
                     "- Each query <= 12 words.\n"
-                    "- Query1 MUST target guidance/earnings changes (e.g., guidance raised/cut, outlook, forecast, EPS/revenue).\n"
-                    "- Query2 MUST target context/drivers (industry trend, demand, pricing, regulation, competitors).\n"
+                    f"- Query1 MUST target news related to the company itself (e.g., guidance raised/cut, outlook, forecast, EPS/revenue).\n"
+                    "- Query2 MUST target context/other firm drivers (industry trend, demand, pricing, regulation, competitors).\n"
                     "- Always include the anchor (ticker and/or company) in Query1.\n"
                     "- Query2 may include anchor OR just industry/macro terms depending on user intent.\n"
                     "- Use widely used finance terms: earnings, guidance, outlook, forecast, raises, cuts, revises.\n"
@@ -385,7 +385,7 @@ def create_finalReport_node(state: InputTicker_State) -> InputTicker_State:
             {
                 "role": "system",
                 "content": (
-                    "I am a finance news synthesiser. I only use the provided article evidence for facts. "
+                    "I am a portfolio manager answering a client query. I only use the provided article evidence for facts. "
                     "I provide general risk-management and idea-generation guidance for stock trading for RETAIL TRADERS! "
                     "I keep it concise and structured. "
                     "Return ONLY valid JSON matching the schema."
